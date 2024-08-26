@@ -1,14 +1,17 @@
 
 from django.shortcuts import render
 from django.http.response import JsonResponse 
-from .models import Guest, Movie, Reservations
+from .models import Guest, Movie, Reservations, Post
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .serializers import GuestSerializers, MovieSerializers, ReservitionSerializers
+from .serializers import GuestSerializers, MovieSerializers, ReservitionSerializers, PostSerializer
 from rest_framework import status
 from rest_framework.views import APIView
 from django.http import Http404
 from rest_framework import generics, mixins, viewsets, filters
+from rest_framework.authentication import BasicAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from . permission import IsAuthOrReadOnly
 # Create your views here.
 def no_rest_no_model (request):
 
@@ -129,11 +132,13 @@ class mixins_pk(mixins.RetrieveModelMixin,
 class generics_list(generics.ListCreateAPIView):
     queryset = Guest.objects.all()
     serializer_class = GuestSerializers
-
+    authentication_classes = [TokenAuthentication]
+   # permission_classes = [IsAuthenticated]
 class generics_pk(generics.RetrieveUpdateDestroyAPIView):
     queryset = Guest.objects.all()
     serializer_class = GuestSerializers
-
+    authentication_classes = [TokenAuthentication]
+    #permission_classes = [IsAuthenticated]
 class viewsets_guest (viewsets.ModelViewSet):
     queryset = Guest.objects.all()
     serializer_class = GuestSerializers
@@ -175,3 +180,8 @@ def new_reservation (request):
     reservations.save()
 
     return Response(request.data, status= status.HTTP_201_CREATED)
+
+class Post_pk (generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthOrReadOnly]
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
